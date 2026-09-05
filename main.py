@@ -237,3 +237,35 @@ def material_from_dict(data):
         return Material(data["name"], props)
     else:
         raise ValueError(f"Unknown material type: {mat_type}")
+
+#utils.py
+
+from typing import Tuple
+
+def calculate_stress(force: float, area: float) -> float:
+    """Calculates stress by dividing force by area."""
+    if area <= 0:
+        raise ValueError("Area must be greater than zero")
+    return force / area
+
+def calculate_strain(orig_len: float, ch_len: float) -> float:
+  """Calculates strain by dividing change in length by original length."""
+  if orig_len <= 0:
+    raise ValueError("Original length must be greater than zero")
+  return ch_len / orig_len
+
+def calculate_factor_of_safety(yield_strength: float, stress: float) -> float:
+  """Calculates the factor of safety by dividing yield strength by stress in MPa. """
+  return yield_strength / (stress / 1_000_000)
+
+def validate_positive(value: float, name: str) -> None:
+  """Ensures the values are greater than zero."""
+  if value <= 0:
+    raise ValueError(f"{name} must be greater than zero")
+  return value
+
+def validate_non_negative(value: float, name: str) -> None:
+  """Ensures the values are non-negative."""
+  if value < 0:
+    raise ValueError(f"{name} cannot be negative")
+  return value

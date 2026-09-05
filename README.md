@@ -26,15 +26,20 @@ Repository Structure:
 stress-strain-calculator-group7
 │
 ├── main
+
 ├── Task 1
+
 ├── Task 2
+
 ├── Task 3
+
 ├── Task 4
+
 ├── Task 5
+
 └── Task 6
-    ├── material.py           
-    ├── properties.py         
-    ├── tests.py              
-    ├── utils.py              
-    ├── database.py          
-    └── main.py
+    ├── .gitignore
+    ├── README.md
+    ├── main.py
+    ├── task1.ipynb
+    └── tests.py

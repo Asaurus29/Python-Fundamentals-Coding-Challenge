@@ -444,3 +444,117 @@ class TestAnalysis:
     def __str__(self) -> str:
         return f"{self.name} ({len(self._tests)} test(s) recorded)"
 
+#main.py
+def get_float_input(prompt: str) -> float:
+    """Keep asking the user until a valid number is entered."""
+    while True:
+        raw = input(prompt)
+        try:
+            return float(raw)
+        except ValueError:
+            print("Please enter a valid number.")
+
+
+def choose_material(materials: dict):
+    """pick stuff from dict"""
+    names = list(materials.keys())
+    if not names:
+        print("No materials available.")
+        return None
+
+    print("\nAvailable materials:")
+    for i, name in enumerate(names, start=1):
+        print(f"{i}. {name}")
+
+    while True:
+        choice = input(f"Choose a material (1-{len(names)}): ").strip()
+        try:
+            index = int(choice) - 1
+            if 0 <= index < len(names):
+                return materials[names[index]]
+        except ValueError:
+            pass
+        print("Invalid choice, please try again.")
+
+
+def list_materials(materials: dict) -> None:
+    """Print every material currently in the database."""
+    if not materials:
+        print("No materials in the database.")
+        return
+    print("\n--- Material Database ---")
+    for material in materials.values():
+        print(material)
+
+
+def run_stress_test(materials: dict, analysis: TestAnalysis) -> None:
+    """Prompt the user for test inputs, build a StressTest, and record it."""
+    material = choose_material(materials)
+    if material is None:
+        return
+
+    force = get_float_input("Applied force (N): ")
+    area = get_float_input("Cross-sectional area (m^2): ")
+    orig_len = get_float_input("Original length (m): ")
+    ch_len = get_float_input("Change in length (m): ")
+    label = input("Label for this test (optional, press Enter to skip): ").strip() or None
+
+#stress test and adds value thingy
+    try:
+        test = StressTest(
+            material=material,
+            force=force,
+            area=area,
+            original_length=orig_len,
+            change_in_length=ch_len,
+            label=label,
+        )
+    except ValueError as e:
+        print(f"Input error: {e}")
+        return
+
+    analysis.add_test(test)
+    print(f"\n--- Results ---\n{test}")
+
+
+#add def main
+def main() -> None:
+    """Main program loop: shows the menu and routes user choices."""
+    materials = get_material_database()
+    add_composite_examples(materials)
+    analysis = TestAnalysis("Stress and Strain Test Session")
+
+    while True:
+        print("\n=== Stress and Strain Analysis System ===")
+        print("1. Run a stress/strain test on a material")
+        print("2. List available materials")
+        print("3. View session summary")
+        print("4. Save materials database to JSON")
+        print("5. Load materials database from JSON")
+        print("6. Exit")
+
+        choice = input("Select an option: ").strip()
+
+        if choice == "1":
+            run_stress_test(materials, analysis)
+        elif choice == "2":
+            list_materials(materials)
+        elif choice == "3":
+            print(f"\n{analysis.summary()}")
+        elif choice == "4":
+            path = save_materials_to_json(materials)
+            print(f"Materials saved to {path}")
+        elif choice == "5":
+            try:
+                materials = load_materials_from_json()
+                print("Materials loaded successfully.")
+            except FileNotFoundError as e:
+                print(e)
+        elif choice == "6":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid option, please choose 1-6.")
+
+if _name_ == "_main_":
+    main()

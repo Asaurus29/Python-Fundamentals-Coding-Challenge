@@ -266,3 +266,153 @@ def material_from_dict(data):
     else:
         raise ValueError(f"Unknown material type: {mat_type}")
 
+
+# ================== test.py ==============================
+from typing import List, Optional
+from material import Material
+
+
+class StressTest:
+    """Stress/strain measurement performed on a Material."""
+
+    def __init__(
+        self,
+        material: Material,
+        force: float,
+        area: float,
+        original_length: float,
+        change_in_length: float,
+        label: Optional[str] = None,
+    ):
+        if force <= 0:
+            raise ValueError("Force must be positive")
+        if area <= 0:
+            raise ValueError("Area must be positive")
+        if original_length <= 0:
+            raise ValueError("Original length must be positive")
+        if change_in_length < 0:
+            raise ValueError("Change in length must be zero or positive")
+
+        self.material = material
+        self._force = force
+        self._area = area
+        self._original_length = original_length
+        self._change_in_length = change_in_length
+        self.label = label or f"{material.name} test"
+
+    @property
+    def stress(self) -> float:
+        """Stress in MPa (force in N / area in m^2, scaled to MPa)."""
+        return self._force / self._area
+
+    @property
+    def strain(self) -> float:
+        return self._change_in_length / self._original_length
+
+
+    @property
+    def youngs_modulus(self) -> float:
+        """Observed Young's modulus in GPa."""
+        if self.strain == 0:
+            return float("inf")
+        return (self.stress / self.strain) / 1000
+
+    @property
+    def safety_factor(self) -> float:
+        """Ratio of the material's yield strength to the applied stress."""
+        return self.material.properties.yield_strength / self.stress
+
+    def gonna_fail(self) -> bool:
+        return self.stress >= self.material.properties.yield_strength
+
+    def __str__(self) -> str:
+        return (
+            f"{self.label}: Stress = {self.stress:.2f} MPa, "
+            f"Strain = {self.strain:.6f}, "
+            f"E(observed) = {self.youngs_modulus:.2f} GPa, "
+            f"Safety Factor = {self.safety_factor:.2f}"
+        )
+
+    def __lt__(self, other) -> bool:
+        if not isinstance(other, StressTest):
+            return NotImplemented
+        return self.stress < other.stress
+
+
+class TestAnalysis:
+    """Collects StressTest results and reports on them (a session's history)."""
+
+    def __init__(self, name: str = "Materials Test"):
+        self.name = name
+        self._tests: List[StressTest] = []
+
+    @property
+    def tests(self) -> List[StressTest]:
+        return list(self._tests)
+
+
+    def add_test(self, test: StressTest):
+        if not isinstance(test, StressTest):
+            raise ValueError("Test must be of type StressTest")
+        self._tests.append(test)
+        print("Calculation added to history.")
+
+    def test_material(self, material_name: str) -> List[StressTest]:
+
+
+    def strongest_material(self) -> Optional[Material]:
+        materials = {t.material.name: t.material for t in self._tests}
+        if not materials:
+            return None
+        return max(materials.values(), key=lambda mat: mat.properties.yield_strength)
+
+
+    def highest_stress_test(self) -> Optional[StressTest]:
+        if not self._tests:
+            return None
+        return max(self._tests, key=lambda test: test.stress)
+
+
+    def failed_tests(self) -> List[StressTest]:
+        return [t for t in self._tests if t.gonna_fail()]
+
+
+    def average_youngs_modulus(self, material_name: str) -> Optional[float]:
+        relevant = self.test_material(material_name)
+        if not relevant:
+            return None
+        return sum(t.youngs_modulus for t in relevant) / len(relevant)
+
+    def summary(self) -> str:
+        if not self.tests:
+            return f"{self.name}: no tests recorded yet."
+
+
+        lines = [f"-- {self.name}: Summary report --", f"Total Tests: {len(self.tests)}"]
+        materials = sorted({t.material.name for t in self.tests})
+
+        for material_name in materials:
+            mat_tests = self.test_material(material_name)
+            avg_e = self.average_youngs_modulus(material_name)
+            fails = [t for t in mat_tests if t.gonna_fail()]
+            lines.append(
+                f"- {material_name}: {len(mat_tests)} test(s), "
+                f"avg E={avg_e:.2f} GPa, failures={len(fails)}"
+            )
+
+        strongest = self.strongest_material()
+        if strongest:
+            lines.append(f"Strongest material: {strongest.name}")
+
+        hardest = self.highest_stress_test()
+        if hardest:
+            lines.append(f"Highest-stress test: {hardest}")
+
+        return "\n".join(lines)
+
+    def __len__(self) -> int:
+        return len(self._tests)
+
+    def __str__(self) -> str:
+        return f"{self.name} ({len(self._tests)} test(s) recorded)"
+

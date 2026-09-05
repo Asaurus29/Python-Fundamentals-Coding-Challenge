@@ -38,8 +38,13 @@ stress-strain-calculator-group7
 ├── Task 5
 
 └── Task 6
+
     ├── .gitignore
+    
     ├── README.md
+    
     ├── main.py
+    
     ├── task1.ipynb
+    
     └── tests.py

@@ -121,3 +121,51 @@ def calculate_factor_of_safety(yield_strength: float, stress: float) -> float:
   safety_factor = yield_strength / (stress / 1_000_000)
   return safety_factor
 
+#Display and output
+def display_material_menu(materials_database: dict) -> None:
+  """ Display the material menu. """
+  print("Material Menu:")
+  for material in materials_database:
+    print(f"  - {material}")
+
+def display_calculation_results(results: dict) -> None:
+  """ Display the calculation results. """
+  print("Calculation Results:")
+  print(f"Stress: {results['stress']/1_000_000:.2f} MPa")
+  print(f"Strain: {results['strain']:.6f}")
+  print(f"Young's Modulus: {results['youngs_modulus']} GPa")
+  print(f"Yield Strength: {results['yield_strength']} MPa")
+  print(f"Safety Factor: {results['safety_factor']:.2f}")
+
+def display_session_summary(history: list) -> None:
+  """ Display the session summary. """
+  print("Session Summary:")
+  if not history:
+    print("No calculations performed yet.")
+    return
+  for i, calculation_method in enumerate(history):
+    print(f"\n--- Calculation {i+1} ---")
+    print(f"Material: {calculation_method['material']}")
+    print("Inputs:")
+    for key, value in calculation_method["inputs"].items():
+      print(f"{key.replace('_', ' ').title()}: {value:.2e}")
+    print("Results:")
+    print(f"Stress: {calculation_method['results']['stress']/1_000_000:.2f} MPa")
+    print(f"Strain: {calculation_method['results']['strain']:.6f}")
+    print(f"Young's Modulus: {calculation_method['results']['youngs_modulus']} GPa")
+    print(f"Yield Strength: {calculation_method['results']['yield_strength']} MPa")
+    print(f"Safety Factor: {calculation_method['results']['safety_factor']:.2f}")
+
+def display_safety_analysis(stress: float, yield_strength: float, safety_factor: float) -> None:
+  """ Display the safety analysis. """
+  stress_mpa = stress / 1_000_000
+  print("Safety Analysis:")
+  print(f"Stress: {stress_mpa:.2f} MPa")
+  print(f"Yield Strength: {yield_strength:.2e} MPa")
+  print(f"Safety Factor: {safety_factor:.2f}")
+  if safety_factor >= 2:
+    print("Safe.")
+  elif safety_factor >= 1:
+    print("Warning. Not safe.")
+  else:
+    print("Unsafe.")

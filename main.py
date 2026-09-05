@@ -269,3 +269,5 @@ def validate_non_negative(value: float, name: str) -> None:
   if value < 0:
     raise ValueError(f"{name} cannot be negative")
   return value
+
+# test py

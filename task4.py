@@ -169,3 +169,76 @@ def display_safety_analysis(stress: float, yield_strength: float, safety_factor:
     print("Warning. Not safe.")
   else:
     print("Unsafe.")
+
+#Main
+def main() -> None:
+  """ Main function to orchestrate all the calculations """
+  materials_database = get_material_database()
+  history = []
+
+  while True:
+    print("-"*60)
+    print("Welcome to the Stress and Strain Calculator!".center(60))
+    print("-"*60)
+    print()
+
+    display_material_menu(materials_database)
+    print("  - Custom")
+    material = input("Enter the material (or type 'exit' to quit): ")
+    if material.lower() == "exit":
+      break
+
+    try:
+      if material.lower() == "custom":
+        material = input("Enter the material name: ")
+        yield_strength = float(input("Enter the yield strength (in MPa): "))
+        youngs_modulus = float(input("Enter the Young's modulus (in GPa): "))
+        material_properties = {"yield_strength": yield_strength, "youngs_modulus": youngs_modulus}
+        materials_database[material] = material_properties
+        material = material
+      else:
+        material_properties = get_material_properties(material, materials_database)
+
+      force = float(input("Enter the applied force (in newtons): "))
+      area = float(input("Enter the cross-sectional area (in square meters): "))
+      orig_len = float(input("Enter the original length of the material (in meters): "))
+      ch_len = float(input("Enter the change in length (in meters): "))
+      validate_input(force, area, orig_len, ch_len)
+
+      stress = calculate_stress(force, area)
+      strain = calculate_strain(orig_len, ch_len)
+
+      youngs_modulus = calculate_youngs_modulus(stress, strain) / 1_000_000_000
+
+      safety_factor = calculate_factor_of_safety(material_properties["yield_strength"], stress)
+
+      inputs = {
+        "force": force,
+        "area": area,
+        "orig_len": orig_len,
+        "ch_len": ch_len
+      }
+
+      results = {
+        "stress": stress,
+        "strain": strain,
+        "youngs_modulus": material_properties["youngs_modulus"],
+        "yield_strength": material_properties["yield_strength"],
+        "safety_factor": safety_factor
+      }
+
+      calculation_method = create_calculation_method(material, inputs, results)
+      add_to_history(calculation_method, history)
+
+      display_calculation_results(results)
+      display_safety_analysis(stress, material_properties["yield_strength"], safety_factor)
+
+    except ValueError as e:
+      print(f"Error: {e}")
+      continue
+
+  display_session_summary(history)
+  print("Closing program...")
+
+if __name__ == "__main__":
+  main()

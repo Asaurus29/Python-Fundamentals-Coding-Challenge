@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from properties import MaterialProperties
 
-
 @dataclass
 class MaterialProperties:
 

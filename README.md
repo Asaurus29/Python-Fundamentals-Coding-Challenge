@@ -24,6 +24,7 @@ How to Run the Program:
 
 Repository Structure:
 stress-strain-calculator-group7
+
 │
 ├── main
 

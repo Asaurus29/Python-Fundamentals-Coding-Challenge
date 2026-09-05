@@ -18,8 +18,23 @@ Project Description: The Stress and Strain Analysis System is a Python based pro
 
 Program Features:
 
-Installation/Requirements:
+Installation/Requirements: Python 3.8+, Git
 
-How to Run the Program
+How to Run the Program:
 
-Repository Structure
+Repository Structure:
+stress-strain-calculator-group7
+│
+├── main
+├── Task 1
+├── Task 2
+├── Task 3
+├── Task 4
+├── Task 5
+└── Task 6
+    ├── material.py           
+    ├── properties.py         
+    ├── tests.py              
+    ├── utils.py              
+    ├── database.py          
+    └── main.py

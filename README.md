@@ -14,11 +14,11 @@ Theo Elijah Emaas	Task 5 – Object-Oriented Stress and Strain System	Classes, i
 
 ALL MEMBERS	Task 6 – Final Modular Application and Integration	Modules, imports, JSON, CSV, datetime, pathlib/os, integration
 
-Project Description
+Project Description: The Stress and Strain Analysis System is a Python based project, developed through collaborative efforts from each member of the team. The project has the ability to compute basic equations to more complex equations involving essential material mechanics, analyzing safety factors, managing session data, comparing different material class properties (metals, plastics, composites), and recording test histories for future analysis.
 
-Program Features
+Program Features:
 
-Installation/Requirements
+Installation/Requirements:
 
 How to Run the Program
 

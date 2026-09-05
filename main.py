@@ -487,3 +487,47 @@ def run_stress_test(materials: dict, analysis: TestAnalysis) -> None:
 
     analysis.add_test(test)
     print(f"\n--- Results ---\n{test}")
+
+#add def main 
+def main() -> None:
+    """Main program loop: shows the menu and routes user choices."""
+    materials = get_material_database()
+    add_composite_examples(materials)
+    analysis = TestAnalysis("Stress and Strain Test Session")
+
+    while True:
+        print("\n=== Stress and Strain Analysis System ===")
+        print("1. Run a stress/strain test on a material")
+        print("2. List available materials")
+        print("3. View session summary")
+        print("4. Save materials database to JSON")
+        print("5. Load materials database from JSON")
+        print("6. Exit")
+
+        choice = input("Select an option: ").strip()
+
+        if choice == "1":
+            run_stress_test(materials, analysis)
+        elif choice == "2":
+            list_materials(materials)
+        elif choice == "3":
+            print(f"\n{analysis.summary()}")
+        elif choice == "4":
+            path = save_materials_to_json(materials)
+            print(f"Materials saved to {path}")
+        elif choice == "5":
+            try:
+                materials = load_materials_from_json()
+                print("Materials loaded successfully.")
+            except FileNotFoundError as e:
+                print(e)
+        elif choice == "6":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid option, please choose 1-6.")
+
+
+if __name__ == "__main__":
+    main()
+

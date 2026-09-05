@@ -16,7 +16,7 @@ ALL MEMBERS	Task 6 – Final Modular Application and Integration	Modules, import
 
 Project Description: The Stress and Strain Analysis System is a Python based project, developed through collaborative efforts from each member of the team. The project has the ability to compute basic equations to more complex equations involving essential material mechanics, analyzing safety factors, managing session data, comparing different material class properties (metals, plastics, composites), and recording test histories for future analysis.
 
-Program Features: 
+Program Features: The application accurately computes mechanical properties like stress, strain, Young's modulus, and factor of safety, all protected by robust input validation to prevent crashes. It includes an object-oriented material management system that allows the use of both predefined and user-defined profiles for metals, plastics, and composites. During a session the software keeps a detailed record of the test histories, produces statistical summaries, and guarantees long-term data persistence by storing the session states in JSON format and exporting the results in CSV form with automatically inserted timestamps.
 
 Installation/Requirements: Python 3.8+, Git
 

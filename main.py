@@ -1,13 +1,46 @@
-# material.py
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
+import json
+from pathlib import Path
 
-# Import from our own modules
-from properties import MaterialProperties
+
+# ======= properties.py ================
+
+@dataclass
+class MaterialProperties:
+
+    density: float
+    yield_strength: float
+    young_modulus: float
+    # data properties holder vv important
+
+    def __post_init__(self):
+        if self.density <= 0:
+            raise ValueError("Density must be greater than zero")
+        if self.yield_strength <= 0:
+            raise ValueError("Yield strength must be greater than zero")
+        if self.young_modulus <= 0:
+            raise ValueError("Young's modulus must be greater than zero")
+
+    def to_dict(self) -> dict:
+        return {
+            "density": self.density,
+            "yield_strength": self.yield_strength,
+            "young_modulus": self.young_modulus,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "MaterialProperties":
+        return cls(
+            density=data["density"],
+            yield_strength=data["yield_strength"],
+            young_modulus=data["young_modulus"],
+        )
 
 
-class Material:
+# ============== material.py =============
+
     """Base class for any material used in a stress test."""
 
     def __init__(self, name: str, properties: MaterialProperties):
@@ -54,9 +87,16 @@ class Material:
 
  #define order by yield stregth it also fix sort and max
     def __lt__(self, other) -> bool:
-        if not isinstance(other, StressTest):
+        if not isinstance(other, Material):
             return NotImplemented
         return self.properties.yield_strength < other.properties.yield_strength
+
+    def to_dict(self) -> dict:
+        return {
+            "type": type(self).__name__,
+            "name": self.name,
+            "properties": self.properties.to_dict(),
+        }
 
 
 class Metal(Material):
@@ -69,6 +109,11 @@ class Metal(Material):
         ferrous_text = "Ferrous" if self.is_ferrous else "Not Ferrous"
         return f"{self.name} ({ferrous_text} metal, Density: {self.properties.density} kg/m^3)"
 
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["is_ferrous"] = self.is_ferrous
+        return data
+
 
 class Plastic(Material):
     def __init__(self, name: str, properties: MaterialProperties, is_thermo: bool = True):
@@ -78,6 +123,11 @@ class Plastic(Material):
     def __str__(self) -> str:
         kind = "Thermoplastic" if self.is_thermo else "Not thermoplastic"
         return f"{self.name} ({kind} plastic, Density: {self.properties.density} kg/m^3)"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["is_thermo"] = self.is_thermo
+        return data
 
 
 class Composite(Material):
@@ -99,31 +149,14 @@ class Composite(Material):
             f"Density: {self.properties.density} kg/m^3)"
         )
 
-#properties.py
-
-@dataclass
-class MaterialProperties:
-
-    density: float
-    yield_strength: float
-    young_modulus: float
-    # data properties holder vv important
-
-    def __post_init__(self):
-        if self.density <= 0:
-            raise ValueError("Density must be greater than zero")
-        if self.yield_strength <= 0:
-            raise ValueError("Yield strength must be greater than zero")
-        if self.young_modulus <= 0:
-            raise ValueError("Young's modulus must be greater than zero")
+    def to_dict(self) -> dict:
+        data = super().to_dict()
+        data["made_of_material"] = self.made_of_material.name
+        data["strengthening_material"] = self.strengthening_material.name
+        return data
 
 
-#Database
-import json
-from pathlib import Path
-
-from material import Material, Metal, Plastic, Composite
-from properties import MaterialProperties
+# =============== database.py =============
 
 DEFAULT_DATA_DIR = Path("data")
 DEFAULT_MATERIALS_FILE = DEFAULT_DATA_DIR / "materials.json"
@@ -200,9 +233,6 @@ def load_materials_from_json(filepath=DEFAULT_MATERIALS_FILE):
 
     materials = {}
 
-
-
-    
     for name in raw:
         data = raw[name]
         if data["type"] == "Composite":
@@ -238,9 +268,8 @@ def material_from_dict(data):
     else:
         raise ValueError(f"Unknown material type: {mat_type}")
 
-#utils.py
 
-from typing import Tuple
+# ======================= utils.py ==============
 
 def calculate_stress(force: float, area: float) -> float:
     """Calculates stress by dividing force by area."""
@@ -270,11 +299,8 @@ def validate_non_negative(value: float, name: str) -> None:
     raise ValueError(f"{name} cannot be negative")
   return value
 
-# test py
 
-from typing import List, Optional
-from material import Material
-
+# ======================= tests.py ====================
 
 class StressTest:
     """Stress/strain measurement performed on a Material."""
@@ -425,6 +451,7 @@ class TestAnalysis:
         return f"{self.name} ({len(self._tests)} test(s) recorded)"
 
 
+# ======================= main.py ==================
 
 def get_float_input(prompt: str) -> float:
     """Keep asking the user until a valid number is entered."""
@@ -458,6 +485,16 @@ def choose_material(materials: dict):
         print("Invalid choice, please try again.")
 
 
+def list_materials(materials: dict) -> None:
+    """Print every material currently in the database."""
+    if not materials:
+        print("No materials in the database.")
+        return
+    print("\n--- Material Database ---")
+    for material in materials.values():
+        print(material)
+
+
 def run_stress_test(materials: dict, analysis: TestAnalysis) -> None:
     """Prompt the user for test inputs, build a StressTest, and record it."""
     material = choose_material(materials)
@@ -470,9 +507,8 @@ def run_stress_test(materials: dict, analysis: TestAnalysis) -> None:
     ch_len = get_float_input("Change in length (m): ")
     label = input("Label for this test (optional, press Enter to skip): ").strip() or None
 
-
 #stress test and adds value thingy
-    try: 
+    try:
         test = StressTest(
             material=material,
             force=force,
@@ -488,7 +524,8 @@ def run_stress_test(materials: dict, analysis: TestAnalysis) -> None:
     analysis.add_test(test)
     print(f"\n--- Results ---\n{test}")
 
-#add def main 
+
+#add def main
 def main() -> None:
     """Main program loop: shows the menu and routes user choices."""
     materials = get_material_database()
@@ -530,4 +567,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

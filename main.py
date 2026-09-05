@@ -116,3 +116,124 @@ class MaterialProperties:
             raise ValueError("Yield strength must be greater than zero")
         if self.young_modulus <= 0:
             raise ValueError("Young's modulus must be greater than zero")
+
+
+#Database
+import json
+from pathlib import Path
+
+from material import Material, Metal, Plastic, Composite
+from properties import MaterialProperties
+
+DEFAULT_DATA_DIR = Path("data")
+DEFAULT_MATERIALS_FILE = DEFAULT_DATA_DIR / "materials.json"
+
+
+def get_material_database():
+    # this is basically just a dictionary of all our starting materials
+    # so we dont have to type all the numbers again every time we run the program
+    materials = {
+        "Steel": Metal(
+            "Steel",
+            MaterialProperties(density=7850, yield_strength=250, young_modulus=200),
+            is_ferrous=True,
+        ),
+        "Aluminum": Metal(
+            "Aluminum",
+            MaterialProperties(density=2700, yield_strength=95, young_modulus=69),
+            is_ferrous=False,
+        ),
+        "Titanium": Metal(
+            "Titanium",
+            MaterialProperties(density=4500, yield_strength=880, young_modulus=114),
+            is_ferrous=False,
+        ),
+        "ABS Plastic": Plastic(
+            "ABS Plastic",
+            MaterialProperties(density=1040, yield_strength=40, young_modulus=2.3),
+            is_thermo=True,
+        ),
+    }
+    return materials
+
+
+def add_composite_examples(materials_database):
+    # adds one composite material made out of 2 of the materials above,
+    # just so the Composite class actually gets used somewhere
+    if "Steel" in materials_database and "ABS Plastic" in materials_database:
+        steel = materials_database["Steel"]
+        plastic = materials_database["ABS Plastic"]
+        fiberglass_steel = Composite(
+            "Fiberglass-Steel",
+            MaterialProperties(density=1900, yield_strength=600, young_modulus=40),
+            made_of_material=plastic,
+            strengthening_material=steel,
+        )
+        materials_database["Fiberglass-Steel"] = fiberglass_steel
+
+
+def save_materials_to_json(materials_database, filepath=DEFAULT_MATERIALS_FILE):
+    # json.dump ,
+    # itcant save file directly so calls dict
+    # each one first to turn it into a plain dictionary
+    filepath = Path(filepath)
+    filepath.parent.mkdir(parents=True, exist_ok=True)  # make the data folder if doesnt exist
+
+    serializable = {}
+    for name in materials_database:
+        material = materials_database[name]
+        serializable[name] = material.to_dict()
+
+    with filepath.open("w", encoding="utf-8") as f:
+        json.dump(serializable, f, indent=2)
+
+    return filepath
+
+
+def load_materials_from_json(filepath=DEFAULT_MATERIALS_FILE):
+    filepath = Path(filepath)
+    if not filepath.exists():
+        raise FileNotFoundError(f"No materials database found at {filepath}")
+
+    with filepath.open("r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    materials = {}
+
+
+
+    
+    for name in raw:
+        data = raw[name]
+        if data["type"] == "Composite":
+            continue
+        materials[name] = material_from_dict(data)
+
+    for name in raw:
+        data = raw[name]
+        if data["type"] != "Composite":
+            continue
+        props = MaterialProperties.from_dict(data["properties"])
+        made_of_name = data["made_of_material"]
+        strengthen_name = data["strengthening_material"]
+        made_of = materials[made_of_name]
+        strengthened_with = materials[strengthen_name]
+        materials[name] = Composite(data["name"], props, made_of, strengthened_with)
+
+    return materials
+
+
+def material_from_dict(data):
+    # checks if plastic metal or if in the data
+    # makes json fiel
+    props = MaterialProperties.from_dict(data["properties"])
+    mat_type = data["type"]
+
+    if mat_type == "Metal":
+        return Metal(data["name"], props, is_ferrous=data.get("is_ferrous", False))
+    elif mat_type == "Plastic":
+        return Plastic(data["name"], props, is_thermo=data.get("is_thermo", True))
+    elif mat_type == "Material":
+        return Material(data["name"], props)
+    else:
+        raise ValueError(f"Unknown material type: {mat_type}")
